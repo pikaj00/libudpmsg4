@@ -1,0 +1,5 @@
+encdec is a service for encrypting and decrypting data.  It accepts
+requests from stdin and sends responses to stdout.  Requests and responses
+are in udpmsg4 format.  The code is simple and clear so you can read the
+source if you care in the exact protocol.  php-nacl.php uses the encdec
+service if php-nacl is not installed.

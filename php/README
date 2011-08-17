@@ -1,0 +1,7 @@
+This is the PHP implementation.  It can run with UFO's php-nacl module for
+PHP or with php-nacl.php and encdec from the C directory.  php-nacl.php is
+about 20%-30% slower as UFO's php-nacl for small scripts and about the
+same speed for big scripts.  php-nacl.php implements a interface that is
+compatible to php-nacl and not requires libudpmsg4.php, you can use it
+in other PHP projects that need nacl.  php-nacl.php+encdec not requires
+patches for nacl so it is a better choice for some platforms as amd64.
