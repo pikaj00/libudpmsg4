@@ -134,7 +134,6 @@ class udpmsg4_client {
   if ($frame===FALSE) return $frame;
   if ($crypto_for===NULL) return $frame;
   $newframe=array_merge(array('CMD'=>'ENC','SRCKEY'=>$this->pubkey),$crypto_for);
-//  $c=nacl_crypto_box_curve25519xsalsa20poly1305($frame,$newframe['NONCE'],$newframe['DSTKEY'],$this->seckey);
   $c=nacl_crypto_box($frame,$newframe['NONCE'],$newframe['DSTKEY'],$this->seckey);
   if ($c===FALSE) return FALSE;
   return new udpmsg4_packet (array_merge($newframe,array('DATA'=>$c)));
@@ -150,7 +149,6 @@ class udpmsg4_client {
   if ($f['DSTKEY']!==$this->pubkey) return $f;
   if (!isset($f['NONCE']))
    if (isset($f['TS'])) $f['NONCE']=$f['TS']; else return FALSE;
-//  $msg=nacl_crypto_box_curve25519xsalsa20poly1305_open($f['DATA'],$f['NONCE'],$f['SRCKEY'],$this->seckey);
   $msg=nacl_crypto_box_open($f['DATA'],$f['NONCE'],$f['SRCKEY'],$this->seckey);
   if ($msg===FALSE) return FALSE;
   return $this->parse(udpmsg4_packet::parse($msg));
