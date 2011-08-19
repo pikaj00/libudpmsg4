@@ -10,14 +10,12 @@ class udpmsg4_packet implements ArrayAccess {
  static function miniframe_msg ($msg) {
   $len = strlen($msg);
   if ($len > 255) return FALSE;
-  $lens = chr($len);
-  return $lens.$msg;
+  return chr($len).$msg;
  }
  static function frame_msg ($msg) {
   $len = strlen($msg);
   if ($len > 1024) return FALSE;
-  $lens = chr(floor($len / 256)).chr($len % 256);
-  return $lens.$msg;
+  return chr(floor($len / 256)).chr($len % 256).$msg;
  }
  static function unminiframe_msg (&$b) {
   $len = ord($b[0]);
@@ -88,6 +86,7 @@ class udpmsg4_packet implements ArrayAccess {
  function offsetGet ($key) { return $this->kvp($key); }
  function offsetSet ($key,$value) { $this->kvps[$key]=$value; }
  function offsetUnset ($key) { unset($this->kvps[$key]); }
+ function __toString () { return $this->unframed(); }
 }
 
 class udpmsg4_client {
@@ -121,10 +120,10 @@ class udpmsg4_client {
  function create_frame_nocrypt ($p) {
   if (!isset($p['DUMMY'])) $p['DUMMY'] = rand(0, 999999);
   if (!isset($p['NET'])) $p['NET'] = $this->netname;
-  $p = new udpmsg4_packet ($p);
-  return $p->unframed();
+  return new udpmsg4_packet ($p);
  }
  function crypto_for ($p) {
+  if (!isset($p['DST'])) return NULL;
   foreach ($this->keyring as $pubkey => $prefix)
    if (($p['DST']===$prefix) || (substr($p['DST'],0,strlen($prefix)+1)==="$prefix/"))
     return array('DSTKEY'=>self::hex2key($pubkey),'NONCE'=>'123456781234567812345678');
@@ -140,8 +139,7 @@ class udpmsg4_client {
  }
  function create_frame ($p) {
   $frame=$this->create_frame_nocrypt($p);
-  $frame=$this->encrypt_frame($frame,$this->crypto_for($p));
-  return $frame;
+  return $this->encrypt_frame($frame,$this->crypto_for($p));
  }
  function parse ($f) {
   if (($f===NULL)||($f===FALSE)) return $f;
@@ -178,19 +176,51 @@ class udpmsg4_client {
   if (!isset($p['CHN'])&&isset($p['DST'])) $p['CHN']=$p['DST'];
   return $p;
  }
- function create_message ($to,$data) {
-  $p=array('CMD'=>'MSG','SRC'=>'/'.$this->netname.'/'.$this->user,'DST'=>$to,'MSG'=>$data);
+ function fill_from ($p,$from=NULL) {
+  if ($from!==NULL)
+   if ($from[0]==='/') $p['SRC']=$from;
+   else $p['SRC']='/'.$this->netname.'/'.$from;
+  else $p['SRC']='/'.$this->netname.'/'.$this->user;
   return $p;
+ }
+ function create_message ($to,$data,$from=NULL) {
+  $p=array('CMD'=>'MSG','SRC'=>NULL,'DST'=>$to,'MSG'=>$data);
+  return $this->fill_from($p,$from);
+ }
+ function create_join ($to,$from=NULL) {
+  $p=array('CMD'=>'JOIN','SRC'=>NULL,'DST'=>$to);
+  return $this->fill_from($p,$from);
+ }
+ function create_part ($to,$reason=NULL,$from=NULL) {
+  $p=array('CMD'=>'PART','SRC'=>NULL,'DST'=>$to,'REASON'=>$reason);
+  return $this->fill_from($p,$from);
+ }
+ function create_quit ($reason=NULL,$from=NULL) {
+  $p=array('CMD'=>'QUIT','SRC'=>NULL,'REASON'=>$reason);
+  return $this->fill_from($p,$from);
  }
  function send_message ($to,$data,$from=NULL) {
-  $p=$this->create_message($to,$data);
+  $p=$this->create_message($to,$data,$from);
   $p=$this->write_compat($p);
-  $f=$this->create_frame($p);
-  return $f;
+  return $this->create_frame($p);
  }
- function recv_message ($f) {
+ function send_join ($to,$from=NULL) {
+  $p=$this->create_join($to,$from);
+  $p=$this->write_compat($p);
+  return $this->create_frame($p);
+ }
+ function send_part ($to,$reason=NULL,$from=NULL) {
+  $p=$this->create_part($to,$reason,$from);
+  $p=$this->write_compat($p);
+  return $this->create_frame($p);
+ }
+ function send_quit ($reason=NULL,$from=NULL) {
+  $p=$this->create_quit($reason,$from);
+  $p=$this->write_compat($p);
+  return $this->create_frame($p);
+ }
+ function recv_packet ($f) {
   $p=$this->parse($f);
-  $p=$this->read_compat($p);
-  return $p;
+  return $this->read_compat($p);
  }
 }

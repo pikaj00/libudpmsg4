@@ -33,8 +33,14 @@ $c2 = new udpmsg4_client (array_merge($commonconfig,array(
 )));
 
 $f=$c1->send_message('/c2/u2','test');
-var_dump(array_keys($f->kvps));
-$m=$c2->recv_message($f);
+//var_dump(array_keys($f->kvps));
+$m=$c2->recv_packet($f);
+var_dump($m);
+$f=$c1->send_join('chat/anonet');
+$m=$c2->recv_packet($f);
+var_dump($m);
+$f=$c1->send_quit('bye');
+$m=$c2->recv_packet($f);
 var_dump($m);
 
 ?>
