@@ -22,6 +22,7 @@ class nacl_engine {
   $frame='';
   foreach ($packet as $key => $value)
    $frame.=chr(strlen($key)).$key.chr(strlen($value)/256).chr(strlen($value)%256).$value;
+  if (strlen($frame)>65536) return FALSE;
   fwrite($this->pipes[0],chr(strlen($frame)/256).chr(strlen($frame)%256).$frame);
   flush($this->pipes[0]);
   $len=fread($this->pipes[1],2);
@@ -46,6 +47,7 @@ class nacl_engine {
   $frame='';
   foreach ($packet as $key => $value)
    $frame.=chr(strlen($key)).$key.chr(strlen($value)/256).chr(strlen($value)%256).$value;
+  if (strlen($frame)>65536) return FALSE;
   fwrite($this->pipes[0],chr(strlen($frame)/256).chr(strlen($frame)%256).$frame);
   flush($this->pipes[0]);
   $len=fread($this->pipes[1],2);

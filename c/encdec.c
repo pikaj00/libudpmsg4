@@ -33,7 +33,7 @@ char* make_frame_len (int len, int realframe) {
 #define key_is(k) (klen==strlen(k)&&!memcmp(key,(k),strlen(k)))
 #define val_is(v) (vlen==strlen(v)&&!memcmp(val,(v),strlen(v)))
 int read_req (struct req* req, int fd) {
- static char buffer[65536];
+ static char buffer[65536*2]={0}; /* contains read after buffer (thx UFO) */
  int len, tlen, wlen, klen, clen;
  char* key;
  if ((len=read(fd,buffer,2))!=2) return -1;
@@ -60,8 +60,8 @@ int read_req (struct req* req, int fd) {
 }
 
 int do_req (struct req req, struct res* res) {
- static char buffer1[65536];
- static char buffer2[65536];
+ static char buffer1[65536*2]={0}; /* contains read after buffer */
+ static char buffer2[65536*2]; /* contains potential buffer overflow */
  switch (req.cmd) {
   case CMD_ENC:
    memcpy(buffer1+crypto_box_ZEROBYTES,req.data,req.len);
@@ -90,11 +90,18 @@ int do_req (struct req req, struct res* res) {
  return 0;
 }
 
-#define try_write(b,l) do { if (write(fd,b,l)!=l) return -1; } while (0)
+int try_write (int fd, char* buffer, int length) {
+ int len, tlen;
+ for (tlen=0; tlen<length; tlen+=len)
+  if ((len=write(fd,buffer+tlen,length-tlen))==-1) return tlen;
+ return tlen;
+}
+#define try_write(b,l) do { if (try_write(fd,b,l)!=l) return -1; } while (0)
 #define try_write_key(k,kl) do { try_write(make_frame_len(kl,0),1); try_write(k,kl); } while (0)
 #define try_write_val(v,vl) do { try_write(make_frame_len(vl,1),2); try_write(v,vl); } while (0)
 #define try_write_kvp(k,kl,v,vl) do { try_write_key(k,kl); try_write_val(v,vl); } while (0)
 int write_res (struct res res, int fd) {
+ if ((1+3+2+3+1+3+2+1+(res.ret?0:1+4+2+res.len)>65536)) return -1;
  try_write(make_frame_len(1+3+2+3+1+3+2+1+(res.ret?0:1+4+2+res.len),1),2);
  try_write_kvp("CMD",3,"res",3);
  try_write_kvp("ret",3,&res.ret,1);
