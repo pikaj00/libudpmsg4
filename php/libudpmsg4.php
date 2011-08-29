@@ -114,8 +114,12 @@ class udpmsg4_client {
    '94aa84f033ddb4a019a4a3a583e7644f8dd8cd8dae67fb67c14db9e87f0be75f'=>'/atomic',
    '12ae24c362880cd6c0e2f186311ce95581c09164c99ae990e31227b0cb86ae19'=>'/A2',
    '54806f876f87c4b790b6c6e47e031f303a86ce48d2d0abbcf1f4c8fffcf88321'=>'/ca',
+   '7938ecd1cd3ac04990bc250c2d7a2fe77f99f08c26da532de34548b5f3a82430'=>'/test',
   );
-  $this->user=$config['user'];
+  $this->set_user(isset($config['user'])?$config['user']:NULL);
+ }
+ function set_user ($user) {
+  $this->user=NULL; if (isset($user)) $this->user=$user;
  }
  function create_frame_nocrypt ($p) {
   if (!isset($p['DUMMY'])) $p['DUMMY'] = rand(0, 999999);
@@ -173,6 +177,7 @@ class udpmsg4_client {
   if ($p['CMD']==='ENC') return $p;
   if (!isset($p['NET'])) $p['NET']=$this->netname;
   if (!isset($p['USR'])) $p['USR']=$this->user;
+  if (!isset($p['USR'])) return FALSE;
   if (!isset($p['CHN'])&&isset($p['DST'])) $p['CHN']=$p['DST'];
   return $p;
  }
@@ -180,7 +185,8 @@ class udpmsg4_client {
   if ($from!==NULL)
    if ($from[0]==='/') $p['SRC']=$from;
    else $p['SRC']='/'.$this->netname.'/'.$from;
-  else $p['SRC']='/'.$this->netname.'/'.$this->user;
+  else if (isset($this->user)) $p['SRC']='/'.$this->netname.'/'.$this->user;
+  else return FALSE;
   return $p;
  }
  function create_message ($to,$data,$from=NULL) {
@@ -224,3 +230,5 @@ class udpmsg4_client {
   return $this->read_compat($p);
  }
 }
+
+// /test seckey 1019f04471cbfe3e8035ae3c8af09a22bd35f321f18adce700b30e1873a91e22
