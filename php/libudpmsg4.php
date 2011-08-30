@@ -115,6 +115,7 @@ class udpmsg4_client {
    '12ae24c362880cd6c0e2f186311ce95581c09164c99ae990e31227b0cb86ae19'=>'/A2',
    '54806f876f87c4b790b6c6e47e031f303a86ce48d2d0abbcf1f4c8fffcf88321'=>'/ca',
    '7938ecd1cd3ac04990bc250c2d7a2fe77f99f08c26da532de34548b5f3a82430'=>'/test',
+   'ce1c4cc4ee1cedf0bcd00cff36d08dfbb9bad1f4df69c3225eb33e9301b1b144'=>'/JCS',
   );
   $this->set_user(isset($config['user'])?$config['user']:NULL);
  }
