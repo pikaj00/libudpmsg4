@@ -110,7 +110,7 @@ class udpmsg4_client {
    'd8f01ea5f6e7a3060572fa876fd64c3ce90a433c44fffafe19a73031b141f71c'=>'/KN',
    '9a36c5cbed4342e2a8af34355d47eb7a38c06afa0eda73c31a8a345572778362'=>'/FNX',
    '09fde77fa5d7b92c50b3a2abe0a304d760ee8ddd19ec31d5b4b6bcbc817a820a'=>'/sI2',
-   '3f224a6f7924398f454d6bdd52ed46ad632c2f11413ef255c1811993522a632f'=>'/obeenet',
+   '3f224a6f7924398f454d6bdd52ed46ad632c2f11413ef255c1811993522a632f'=>'/oNet',
    '94aa84f033ddb4a019a4a3a583e7644f8dd8cd8dae67fb67c14db9e87f0be75f'=>'/atomic',
    '12ae24c362880cd6c0e2f186311ce95581c09164c99ae990e31227b0cb86ae19'=>'/A2',
    'cbc616fdd673e02637b86324401d06a0c597994cb96e517865485d6893585d5f'=>'/CA',
@@ -173,11 +173,18 @@ class udpmsg4_client {
   if (!isset($p['DST'])&&isset($p['CHN'])) $p['DST']=$p['CHN'];
   return $p;
  }
+ function extract_USR ($path) {
+  $c='/'.$this->netname.'/';
+  if (substr($path,0,strlen($c))===$c) return substr($path,strlen($c));
+  return preg_replace(',^.*/,','',$path);
+ }
  function write_compat ($p) {
   if (!isset($p['CMD'])) return $p;
   if ($p['CMD']==='ENC') return $p;
   if (!isset($p['NET'])) $p['NET']=$this->netname;
-  if (!isset($p['USR'])) $p['USR']=$this->user;
+  if (!isset($p['USR']))
+   if ($this->user!==NULL) $p['USR']=$this->user;
+   else $p['USR']=$this->extract_USR($p['SRC']);
   if (!isset($p['USR'])) return FALSE;
   if (!isset($p['CHN'])&&isset($p['DST'])) $p['CHN']=$p['DST'];
   return $p;
