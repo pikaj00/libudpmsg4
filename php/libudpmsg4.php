@@ -133,11 +133,13 @@ class udpmsg4_client {
   foreach ($this->keyring as $pubkey => $prefix)
    if (($p['DST']===$prefix) || (substr($p['DST'],0,strlen($prefix)+1)==="$prefix/"))
     return array('DSTKEY'=>self::hex2key($pubkey),'NONCE'=>'123456781234567812345678');
+  if ($p['DST'][0]==='/') return FALSE;
   return NULL;
  }
  function encrypt_frame ($frame,$crypto_for=NULL) {
   if ($frame===FALSE) return $frame;
   if ($crypto_for===NULL) return $frame;
+  if ($crypto_for===FALSE) return FALSE;
   $newframe=array_merge(array('CMD'=>'ENC','SRCKEY'=>$this->pubkey),$crypto_for);
   $c=nacl_crypto_box($frame,$newframe['NONCE'],$newframe['DSTKEY'],$this->seckey);
   if ($c===FALSE) return FALSE;
