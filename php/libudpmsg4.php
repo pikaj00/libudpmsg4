@@ -44,6 +44,11 @@ class udpmsg4_packet implements ArrayAccess {
   $p->kvps=$ret;
   return $p;
  }
+ static function parse_framed (&$data) {
+  $unframed = udpmsg4_packet::unframe_msg($data);
+  if (($unframed===NULL)||($unframed===FALSE)) return $unframed;
+  return udpmsg4_packet::parse($unframed);
+ }
  function __construct ($data=NULL, $type=NULL) {
   if ($data===NULL) { $this->kvps=array(); return; }
   if ($type===NULL) {
@@ -87,6 +92,13 @@ class udpmsg4_packet implements ArrayAccess {
  function offsetSet ($key,$value) { $this->kvps[$key]=$value; }
  function offsetUnset ($key) { unset($this->kvps[$key]); }
  function __toString () { return $this->unframed(); }
+ static function from_compat ($p) {
+  if (!isset($p['CMD'])) return $p;
+  if ($p['CMD']==='ENC') return $p;
+  if (!isset($p['SRC'])&&isset($p['NET'])&&isset($p['USR'])) $p['SRC']='/'.$p['NET'].'/'.$p['USR'];
+  if (!isset($p['DST'])&&isset($p['CHN'])) $p['DST']=$p['CHN'];
+  return $p;
+ }
 }
 
 class udpmsg4_client {
