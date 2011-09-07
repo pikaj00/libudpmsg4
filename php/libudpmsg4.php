@@ -25,6 +25,7 @@ class udpmsg4_packet implements ArrayAccess {
   return $msg;
  }
  static function unframe_msg (&$b) {
+  if (strlen($b) < 2) return NULL;
   $len = ord($b[0]) * 256 + ord($b[1]);
   if (strlen($b)-2 < $len) return NULL;
   $msg=substr($b,2,$len);
