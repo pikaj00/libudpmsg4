@@ -143,11 +143,16 @@ class udpmsg4_client {
   if (!isset($p['NET'])) $p['NET'] = $this->netname;
   return new udpmsg4_packet ($p);
  }
+ function new_nonce () {
+  $nonce='';
+  for ($i=0; $i<24; ++$i) $nonce.=chr(rand(0,255));
+  return $nonce;
+ }
  function crypto_for ($p) {
   if (!isset($p['DST'])) return NULL;
   foreach ($this->keyring as $pubkey => $prefix)
    if (($p['DST']===$prefix) || (substr($p['DST'],0,strlen($prefix)+1)==="$prefix/"))
-    return array('DSTKEY'=>self::hex2key($pubkey),'NONCE'=>'123456781234567812345678');
+    return array('DSTKEY'=>self::hex2key($pubkey),'NONCE'=>$this->new_nonce());
   if ($p['DST'][0]==='/') return FALSE;
   return NULL;
  }
