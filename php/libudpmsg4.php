@@ -150,11 +150,20 @@ class udpmsg4_client {
  }
  function crypto_for ($p) {
   if (!isset($p['DST'])) return NULL;
+  if (strpos($p['DST'],'/.')!==FALSE) return FALSE;
+  if (strpos($p['DST'],'/@')!==FALSE) return FALSE;
+  if (@$p['DST'][0]!=='/') return NULL;
+  $dst=explode('/',$p['DST']);
+  if (is_dir('resdb/db/udpmsg4')) while (count($dst))
+   if (is_dir($dir='resdb/db/udpmsg4'.join('/',$dst).'/@'))
+    if (file_exists($file=$dir.'/default.key'))
+     return array('DSTKEY'=>self::hex2key(rtrim(file_get_contents($file))),'NONCE'=>$this->new_nonce());
+    else return FALSE;
+   else array_pop($dst);
   foreach ($this->keyring as $pubkey => $prefix)
    if (($p['DST']===$prefix) || (substr($p['DST'],0,strlen($prefix)+1)==="$prefix/"))
     return array('DSTKEY'=>self::hex2key($pubkey),'NONCE'=>$this->new_nonce());
-  if ($p['DST'][0]==='/') return FALSE;
-  return NULL;
+  return FALSE;
  }
  function encrypt_frame ($frame,$crypto_for=NULL) {
   if ($frame===FALSE) return $frame;
