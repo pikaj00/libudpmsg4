@@ -1,3 +1,4 @@
+#!/usr/bin/php
 <?php
 
 include 'libudpmsg4.php';
