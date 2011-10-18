@@ -14,7 +14,6 @@ class udpmsg4_packet implements ArrayAccess {
  }
  static function frame_msg ($msg) {
   $len = strlen($msg);
-  if ($len > 1024) return FALSE;
   return chr(floor($len / 256)).chr($len % 256).$msg;
  }
  static function unminiframe_msg (&$b) {
