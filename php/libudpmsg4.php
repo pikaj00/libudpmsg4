@@ -244,6 +244,10 @@ class udpmsg4_client {
   $p=array('CMD'=>'QUIT','SRC'=>NULL,'REASON'=>$reason);
   return $this->fill_from($p,$from);
  }
+ function create_topic ($to,$topic,$from=NULL) {
+  $p=array('CMD'=>'TOPIC','SRC'=>NULL,'DST'=>$to,'TOPIC'=>$reason);
+  return $this->fill_from($p,$from);
+ }
  function send_message ($to,$data,$from=NULL) {
   $p=$this->create_message($to,$data,$from);
   $p=$this->write_compat($p);
@@ -261,6 +265,11 @@ class udpmsg4_client {
  }
  function send_quit ($reason=NULL,$from=NULL) {
   $p=$this->create_quit($reason,$from);
+  $p=$this->write_compat($p);
+  return $this->create_frame($p);
+ }
+ function send_topic ($to,$topic,$from=NULL) {
+  $p=$this->create_topic($to,$topic,$from);
   $p=$this->write_compat($p);
   return $this->create_frame($p);
  }
