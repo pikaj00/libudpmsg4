@@ -245,7 +245,7 @@ class udpmsg4_client {
   return $this->fill_from($p,$from);
  }
  function create_topic ($to,$topic,$from=NULL) {
-  $p=array('CMD'=>'TOPIC','SRC'=>NULL,'DST'=>$to,'TOPIC'=>$reason);
+  $p=array('CMD'=>'TOPIC','SRC'=>NULL,'DST'=>$to,'TOPIC'=>$topic);
   return $this->fill_from($p,$from);
  }
  function send_message ($to,$data,$from=NULL) {
