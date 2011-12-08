@@ -1,5 +1,9 @@
 encdec is a service for encrypting and decrypting data.  It accepts
 requests from stdin and sends responses to stdout.  Requests and responses
-are in udpmsg4 format.  The code is simple and clear so you can read the
-source if you care in the exact protocol.  php-nacl.php uses the encdec
-service if php-nacl is not installed.
+are in udpmsg4 format.  php-nacl.php uses the encdec service if php-nacl
+is not installed.
+
+encrypt request CMD=enc,DATA=somerandomdata,PUBKEY=destinationpublickey,SECKEY=sourcesecretkey,NONCE=24chars
+encrypt response CMD=res,ret=1byteshouldbe0ifsuccess,DATA=encrypteddata
+decrypt request CMD=dec,DATA=encrypteddata,PUBKEY=sourcepublickey,SECKEY=destinationsecretkey,NONCE=noncefrompacket
+decrypt response CMD=res,ret=1byteshouldbe0ifsuccess,DATA=somerandomdata
