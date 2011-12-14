@@ -137,6 +137,10 @@ class udpmsg4_client {
  function set_user ($user) {
   $this->user=NULL; if (isset($user)) $this->user=$user;
  }
+ function set_keypair ($pubkey,$seckey) {
+  $this->seckey=self::hex2key($seckey);
+  $this->pubkey=self::hex2key($pubkey);
+ }
  function create_frame_nocrypt ($p) {
   if (!isset($p['DUMMY'])) $p['DUMMY'] = rand(0, 999999);
   if (!isset($p['NET'])) $p['NET'] = $this->netname;
