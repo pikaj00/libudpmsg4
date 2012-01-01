@@ -236,6 +236,10 @@ class udpmsg4_client {
   $p=array('CMD'=>'MSG','SRC'=>NULL,'DST'=>$to,'MSG'=>$data);
   return $this->fill_from($p,$from);
  }
+ function create_notice ($to,$data,$from=NULL) {
+  $p=array('CMD'=>'NOTICE','SRC'=>NULL,'DST'=>$to,'MSG'=>$data);
+  return $this->fill_from($p,$from);
+ }
  function create_join ($to,$from=NULL) {
   $p=array('CMD'=>'JOIN','SRC'=>NULL,'DST'=>$to);
   return $this->fill_from($p,$from);
@@ -254,6 +258,11 @@ class udpmsg4_client {
  }
  function send_message ($to,$data,$from=NULL) {
   $p=$this->create_message($to,$data,$from);
+  $p=$this->write_compat($p);
+  return $this->create_frame($p);
+ }
+ function send_notice ($to,$data,$from=NULL) {
+  $p=$this->create_notice($to,$data,$from);
   $p=$this->write_compat($p);
   return $this->create_frame($p);
  }
