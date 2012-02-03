@@ -8,7 +8,9 @@ encrypt response CMD=res,ret=1byteshouldbe0ifsuccess,DATA=encrypteddata
 decrypt request CMD=dec,DATA=encrypteddata,PUBKEY=sourcepublickey,SECKEY=destinationsecretkey,NONCE=noncefrompacket
 decrypt response CMD=res,ret=1byteshouldbe0ifsuccess,DATA=somerandomdata
 
-genkey is a service for generating keypairs.  It accepts requests from stdin and sends responses to stdout.  Requests and responses are in udpmsg4 format.
+genkey is a service for generating keypairs.  It accepts requests from
+stdin and sends responses to stdout.  Requests and responses are in
+udpmsg4 format.
 
 genkey request CMD=genkey
 genkey response CMD=res,ret=1byteshouldbe0ifsuccess,PUBKEY=32bytespublickey,SECKEY=32bytessecretkey
