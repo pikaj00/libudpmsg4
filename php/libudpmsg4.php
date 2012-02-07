@@ -41,8 +41,10 @@ class udpmsg4_packet implements ArrayAccess {
    if (($value===FALSE)||($value===NULL)) return $value;
    $ret[$key]=$value;
   }
-  if (!isset($p['TS'])&&(@$p['X-srn.ano-time']<time()-600)) $p->kvps=array();
-  else $p->kvps=$ret;
+  if (!isset($ret['TS'])&&(@$ret['X-srn.ano-time']<time()-600))
+   $p->kvps=array();
+  else
+   $p->kvps=$ret;
   return $p;
  }
  static function parse_framed (&$data) {
