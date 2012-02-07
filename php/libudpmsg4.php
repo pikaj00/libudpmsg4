@@ -41,7 +41,8 @@ class udpmsg4_packet implements ArrayAccess {
    if (($value===FALSE)||($value===NULL)) return $value;
    $ret[$key]=$value;
   }
-  $p->kvps=$ret;
+  if (!isset($p['TS'])&&(@$p['X-srn.ano-time']<time()-600)) $p->kvps=array();
+  else $p->kvps=$ret;
   return $p;
  }
  static function parse_framed (&$data) {
@@ -142,6 +143,8 @@ class udpmsg4_client {
   $this->pubkey=self::hex2key($pubkey);
  }
  function create_frame_nocrypt ($p) {
+  if (!isset($p['TS'])&&!isset($p['X-srn.ano-time']))
+   $p['X-srn.ano-time'] = time();
   if (!isset($p['DUMMY'])) $p['DUMMY'] = rand(0, 999999);
   if (!isset($p['NET'])) $p['NET'] = $this->netname;
   return new udpmsg4_packet ($p);
