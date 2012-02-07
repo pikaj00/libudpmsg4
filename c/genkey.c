@@ -32,7 +32,7 @@ int read_req (struct req* req, int fd) {
  char* key;
  if ((len=read(fd,buffer,2))!=2) return -1;
  wlen=frame_len(buffer,1);
- for (tlen=0; tlen<wlen && len>0; len=read(fd,buffer,wlen-tlen),tlen+=len);
+ for (tlen=0; tlen<wlen && len>0; len=read(fd,buffer+tlen,wlen-tlen),tlen+=len);
  if (len<=0) return -1;
  for (tlen=len=0; len<wlen; tlen^=1) {
   clen=frame_len(buffer+len,tlen);
