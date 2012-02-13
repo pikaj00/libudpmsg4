@@ -41,7 +41,7 @@ class udpmsg4_packet implements ArrayAccess {
    if (($value===FALSE)||($value===NULL)) return $value;
    $ret[$key]=$value;
   }
-  if (!isset($ret['TS'])&&(@$ret['X-srn.ano-time']<time()-600))
+  if (isset($ret['CMD'])&&($ret['CMD']!=='ENC')&&!isset($ret['TS'])&&(@$ret['X-srn.ano-time']<time()-600))
    $p->kvps=array();
   else
    $p->kvps=$ret;
