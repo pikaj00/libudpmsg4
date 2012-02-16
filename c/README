@@ -14,3 +14,22 @@ udpmsg4 format.
 
 genkey request CMD=genkey
 genkey response CMD=res,ret=1byteshouldbe0ifsuccess,PUBKEY=32bytespublickey,SECKEY=32bytessecretkey
+
+tai is a service for libtai functions.  It accepts requests from stdin and
+sends responses to stdout.  Requests and responses are in udpmsg4 format.
+php-tai.php uses the tai service.
+
+taia_now request CMD=taia_now
+taia_now response CMD=res,ret=1byteshouldbe0ifsuccess,t=taia64na
+taia_less request CMD=taia_less,a=taia64na,b=taia64na
+taia_less response CMD=res,ret=1byte1or0
+taia_add request CMD=taia_add,a=taia64na,b=taia64na
+taia_add response CMD=res,ret=1byteshouldbe0ifsuccess,t=taia64na
+taia_sub request CMD=taia_sub,a=taia64na,b=taia64na
+taia_sub response CMD=res,ret=1byteshouldbe0ifsuccess,t=taia64na
+taia_half request CMD=taia_half,a=taia64na
+taia_half response CMD=res,ret=1byteshouldbe0ifsuccess,t=taia64na
+seconds2taia request CMD=seconds2taia,seconds=uint32_t
+seconds2taia response CMD=res,ret=1byteshouldbe0ifsuccess,t=taia64na
+isoldtaia request CMD=isoldtaia,seconds=uint32_t,a=taia64na
+isoldtaia response CMD=res,ret=1byte1or0
