@@ -9,7 +9,7 @@ class nacl_engine {
   $this->p=proc_open('./encdec',array(array('pipe','r'),array('pipe','w')),$this->pipes);
   if (!is_resource($this->p)) die("encdec failed to start");
   $this->keygen=proc_open('./genkey',array(array('pipe','r'),array('pipe','w')),$this->keygenpipes);
-  if (!is_resource($this->keygen)) die("keygen failed to start");
+  if (!is_resource($this->keygen)) die("genkey failed to start");
  }
  static function fread_all ($fd,$len) {
   $buffer='';
