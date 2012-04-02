@@ -1,7 +1,7 @@
 <?php
 
 //$nacl_force_encdec=1;
-include 'libudpmsg4.php';
+include 'php/libudpmsg4.php';
 
 /*
 c1:

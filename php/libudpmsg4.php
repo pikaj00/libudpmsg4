@@ -3,7 +3,8 @@
 if (defined('libudpmsg4_loaded')) return;
 define('libudpmsg4_loaded', TRUE);
 
-include 'php-nacl.php';
+include 'php/php-nacl.php';
+include 'php/php-tai.php';
 
 class udpmsg4_packet implements ArrayAccess {
  var $kvps;
@@ -41,7 +42,7 @@ class udpmsg4_packet implements ArrayAccess {
    if (($value===FALSE)||($value===NULL)) return $value;
    $ret[$key]=$value;
   }
-  if (isset($ret['CMD'])&&($ret['CMD']!=='ENC')&&!isset($ret['TS'])&&(@$ret['X-srn.ano-time']<time()-600))
+  if (isset($ret['CMD'])&&($ret['CMD']!=='ENC')&&(!isset($ret['TS'])||isoldtaia(600,$ret['TS']))&&(!isset($ret['X-srn.ano-time'])||($ret['X-srn.ano-time']<time()-600)))
    $p->kvps=array();
   else
    $p->kvps=$ret;
@@ -110,12 +111,14 @@ class udpmsg4_client {
  var $netname;
  var $keyring;
  var $user;
+ var $rp_filter=1;
  static function hex2key ($key) {
   $ret='';
   foreach (str_split($key,2) as $part) $ret.=pack('H*',$part);
   return $ret;
  }
  function __construct ($config=array()) {
+  if (isset($config['rp_filter'])) $this->rp_filter=$config['rp_filter'];
   $this->seckey=self::hex2key($config['seckey']);
   $this->pubkey=self::hex2key($config['pubkey']);
   $this->netname=$config['netname'];
@@ -146,12 +149,19 @@ class udpmsg4_client {
  }
  function create_frame_nocrypt ($p) {
   if (!isset($p['TS'])&&!isset($p['X-srn.ano-time']))
-   $p['X-srn.ano-time'] = time();
+   $p['TS'] = $this->new_ts();
   if (!isset($p['DUMMY'])) $p['DUMMY'] = rand(0, 999999);
   if (!isset($p['NET'])) $p['NET'] = $this->netname;
   return new udpmsg4_packet ($p);
  }
- function new_nonce () {
+ function new_ts ($p=NULL) {
+  if (isset($p)&&isset($p['TS'])) return $p['TS'];
+  return taia_now();
+ }
+ function new_nonce ($nonce=NULL,$srckey=NULL,$dstkey=NULL) {
+  if (isset($nonce))
+   if ($srckey<$dstkey) return str_repeat(chr(0),24-strlen($nonce)).$nonce;
+   else return str_repeat(chr(1),24-strlen($nonce)).$nonce;
   $nonce='';
   for ($i=0; $i<24; ++$i) $nonce.=chr(rand(0,255));
   return $nonce;
@@ -162,15 +172,16 @@ class udpmsg4_client {
   if (strpos($p['DST'],'/@')!==FALSE) return FALSE;
   if (@$p['DST'][0]!=='/') return NULL;
   $dst=explode('/',$p['DST']);
+  $srckey=$this->pubkey;
   if (is_dir('resdb/db/udpmsg4')) while (count($dst))
    if (is_dir($dir='resdb/db/udpmsg4'.join('/',$dst).'/@'))
     if (file_exists($file=$dir.'/default.key'))
-     return array('DSTKEY'=>self::hex2key(rtrim(file_get_contents($file))),'NONCE'=>$this->new_nonce());
+     return array('SRCKEY'=>$srckey,'DSTKEY'=>self::hex2key(rtrim(file_get_contents($file))),'TS'=>$this->new_ts($p));
     else return FALSE;
    else array_pop($dst);
   foreach ($this->keyring as $pubkey => $prefix)
    if (($p['DST']===$prefix) || (substr($p['DST'],0,strlen($prefix)+1)==="$prefix/"))
-    return array('DSTKEY'=>self::hex2key($pubkey),'NONCE'=>$this->new_nonce());
+    return array('SRCKEY'=>$srckey,'DSTKEY'=>self::hex2key($pubkey),'TS'=>$this->new_ts($p));
   return FALSE;
  }
  function encrypt_frame ($frame,$crypto_for=NULL) {
@@ -178,23 +189,35 @@ class udpmsg4_client {
   if ($crypto_for===NULL) return $frame;
   if ($crypto_for===FALSE) return FALSE;
   $newframe=array_merge(array('CMD'=>'ENC','SRCKEY'=>$this->pubkey),$crypto_for);
-  $c=nacl_crypto_box($frame,$newframe['NONCE'],$newframe['DSTKEY'],$this->seckey);
+  $nonce=isset($newframe['NONCE'])?$newframe['NONCE']:$this->new_nonce($newframe['TS'],$newframe['SRCKEY'],$newframe['DSTKEY']);
+  $c=nacl_crypto_box($frame,$nonce,$newframe['DSTKEY'],$this->seckey);
   if ($c===FALSE) return FALSE;
-  return new udpmsg4_packet (array_merge($newframe,array('DATA'=>$c)));
+  return new udpmsg4_packet (array_merge($newframe,array('NONCE'=>$nonce/*BC*/,'DATA'=>$c)));
  }
  function create_frame ($p) {
   $frame=$this->create_frame_nocrypt($p);
   return $this->encrypt_frame($frame,$this->crypto_for($p));
  }
- function parse ($f) {
+ function parse ($f,$pf=NULL) {
   if (($f===NULL)||($f===FALSE)) return $f;
-  if ($f['CMD']!=='ENC') return $f;
+  if ($f['CMD']!=='ENC') {
+   if ($this->rp_filter) {
+    if (!isset($pf)) return $f;
+    $crypto_for=$this->crypto_for(array('DST'=>$f['SRC']));
+    if ($crypto_for===NULL) return $f;
+    if ($crypto_for===FALSE) return FALSE;
+    if ($crypto_for['SRCKEY']!==$pf['DSTKEY']) return FALSE;
+    if ($crypto_for['DSTKEY']!==$pf['SRCKEY']) return FALSE;
+   }
+   return $f;
+  }
   if ($f['DSTKEY']!==$this->pubkey) return $f;
   if (!isset($f['NONCE']))
    if (isset($f['TS'])) $f['NONCE']=$f['TS']; else return FALSE;
+  if (strlen($f['NONCE']<24)) $f['NONCE']=$this->new_nonce($f['NONCE'],$f['SRCKEY'],$f['DSTKEY']);
   $msg=nacl_crypto_box_open($f['DATA'],$f['NONCE'],$f['SRCKEY'],$this->seckey);
   if ($msg===FALSE) return FALSE;
-  return $this->parse(udpmsg4_packet::parse($msg));
+  return $this->parse(udpmsg4_packet::parse($msg),$f);
  }
  function parse_unframed_nocrypt (&$b) { return udpmsg4_packet::parse($b); }
  function parse_unframed (&$b) {

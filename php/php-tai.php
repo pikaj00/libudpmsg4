@@ -53,7 +53,7 @@ class tai_engine {
  function taia_less ($a,$b) {
   $packet=array('CMD'=>'taia_less','a'=>$a,'b'=>$b);
   $p=$this->udpmsg4_request($packet);
-  return $p['ret'];
+  return ord($p['ret']);
  }
  function taia_add ($a,$b) {
   $packet=array('CMD'=>'taia_add','a'=>$a,'b'=>$b);
@@ -80,9 +80,9 @@ class tai_engine {
   return $p['t'];
  }
  function isoldtaia ($seconds,$a) {
-  $packet=array('CMD'=>'taia_less','seconds'=>pack('N',$seconds),'a'=>$a);
+  $packet=array('CMD'=>'isoldtaia','seconds'=>pack('N',$seconds),'a'=>$a);
   $p=$this->udpmsg4_request($packet);
-  return $p['ret'];
+  return ord($p['ret']);
  }
  static function tai_engine () {
   static $engine=NULL;
