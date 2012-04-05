@@ -46,6 +46,7 @@ class udpmsg4_packet implements ArrayAccess {
    $p->kvps=array();
   else
    $p->kvps=$ret;
+  if (isset($ret['SRC'])&&isset($ret['NET'])&&isset($ret['USR'])&&('/'.$ret['NET'].'/'.$ret['USR']!=$ret['SRC'])) $p->kvps=array(); //problem == relay of CA2 it connects to a cloudircd server and creates loop ;-/
   return $p;
  }
  static function parse_framed (&$data) {
